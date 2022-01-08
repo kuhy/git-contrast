@@ -1,0 +1,3 @@
+#+TITLE: git-contrast
+#+AUTHOR: Ondřej Kuhejda
+/CLI tool that reveals change in code quality between commits/

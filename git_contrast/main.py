@@ -1,77 +1,13 @@
-from enum import Enum, auto
 import tempfile
 import os
-import subprocess
 from typing import Optional
 
-from abc import ABC, abstractmethod
 import click
 from click import echo, secho, style
 import git
 
-
-class IssueType(Enum):
-
-    FORMAT = auto()
-    DOCUMENTATION = auto()
-
-
-class Issue(Enum):
-
-    def __init__(self, issue_type: IssueType, description: str):
-        self.issue_type = issue_type
-        self.description = description
-
-    LINE_TOO_LONG = IssueType.FORMAT, "Line too long"
-    MISSING_CLASS_DOCSTRING = IssueType.DOCUMENTATION, "Missing class docstring"
-    MISSING_FUNCTION_DOCSTRING = IssueType.DOCUMENTATION, "Missing function or method docstring"
-
-
-class LinterResult:
-
-    def __init__(self, number_of_issues=None):
-        if number_of_issues:
-            self.number_of_issues = number_of_issues
-        else:
-            self.number_of_issues = {issue: 0 for issue in Issue}
-
-    def __add__(self, other):
-        number_of_issues = {issue: self.number_of_issues[issue] + other.number_of_issues[issue]
-                            for issue in Issue}
-        return LinterResult(number_of_issues)
-
-    def __sub__(self, other):
-        number_of_issues = {issue: self.number_of_issues[issue] - other.number_of_issues[issue]
-                            for issue in Issue}
-        return LinterResult(number_of_issues)
-
-    def __neg__(self):
-        return LinterResult({issue: -self.number_of_issues[issue] for issue in Issue})
-
-
-class Linter(ABC):
-
-    @abstractmethod
-    def lint(self, filename: str) -> LinterResult:
-        pass
-
-
-class PylintLinter(Linter):
-    issues = {
-        'C0301': Issue.LINE_TOO_LONG,
-        'C0115': Issue.MISSING_CLASS_DOCSTRING,
-        'C0116': Issue.MISSING_FUNCTION_DOCSTRING
-    }
-
-    def lint(self, filename: str) -> LinterResult:
-        result = LinterResult()
-        output = subprocess.getoutput("pylint --msg-template='{msg_id}' " + filename)
-        for line in output.split('\n'):
-            key = PylintLinter.issues.get(line)
-            if not key:
-                continue
-            result.number_of_issues[key] = result.number_of_issues[key] + 1
-        return result
+from git_contrast import Linter, LinterResult
+from git_contrast.linters import PylintLinter
 
 
 linters = {
@@ -96,7 +32,7 @@ def print_linter_result(result: LinterResult):
 
 @click.command()
 @click.argument('commit_range', nargs=-1)
-def git_contrast(commit_range):
+def cli(commit_range):
     repo = git.Repo(os.getcwd())
 
     # TODO improve arguments validity checking
@@ -145,4 +81,4 @@ def git_contrast(commit_range):
 
 
 if __name__ == '__main__':
-    git_contrast()
+    cli()
