@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 import json
 import os
 import tempfile
@@ -22,8 +22,8 @@ def get_linter(filename: str) -> Optional[Linter]:
     return linters.get(file_extension)
 
 
-def lint_diff(linter: Linter, diff_item):
-    if diff_item.a_blob and diff_item.b_blob and diff_item.a_blob != diff_item.b_blob:
+def lint_diff(linter: Linter, diff_item, diff_type):
+    if diff_type is DiffType.MODIFIED:
         with tempfile.NamedTemporaryFile() as file1:
             with tempfile.NamedTemporaryFile() as file2:
                 diff_item.a_blob.stream_data(file1)
@@ -31,12 +31,12 @@ def lint_diff(linter: Linter, diff_item):
                 file1.flush()
                 file2.flush()
                 return(linter.lint(file1.name), linter.lint(file2.name))
-    elif diff_item.deleted_file:
+    elif diff_type is DiffType.DELETED:
         with tempfile.NamedTemporaryFile() as file1:
             diff_item.a_blob.stream_data(file1)
             file1.flush()
             return(linter.lint(file1.name), LinterResult())
-    elif diff_item.new_file:
+    elif diff_type is DiffType.ADDED:
         with tempfile.NamedTemporaryFile() as file2:
             diff_item.b_blob.stream_data(file2)
             file2.flush()
@@ -62,7 +62,8 @@ def print_linter_result(result_pre: LinterResult, result_post: LinterResult):
 
 
 def print_linter_result_json(result_pre: LinterResult,
-                             result_post: LinterResult):
+                             result_post: LinterResult,
+                             number_of_files):
     results = {}
     issues = set(result_pre.number_of_issues.keys())
     issues = issues.union(set(result_post.number_of_issues.keys()))
@@ -75,12 +76,21 @@ def print_linter_result_json(result_pre: LinterResult,
             results[issue.linter] = {}
         results[issue.linter][issue.symbolic_name] = {"pre": pre, "post": post,
                                                       "type": issue.category}
-    echo(json.dumps(results))
+    echo(json.dumps({"modified": number_of_files[DiffType.MODIFIED],
+                     "deleted": number_of_files[DiffType.DELETED],
+                     "added": number_of_files[DiffType.ADDED],
+                     "results": results}))
 
 
 class OutputFormat(str, Enum):
     TEXT = "text"
     JSON = "json"
+
+
+class DiffType(Enum):
+    MODIFIED = auto()
+    DELETED = auto()
+    ADDED = auto()
 
 
 @click.command()
@@ -99,28 +109,43 @@ def cli(output_format, commit_range):
     results_pre_sum = LinterResult()
     results_post_sum = LinterResult()
 
+    number_of_files = {DiffType.MODIFIED: 0, DiffType.DELETED: 0,
+                       DiffType.ADDED: 0}
+
     for diff_item in diff_index:
+        if diff_item.a_blob and diff_item.b_blob and (diff_item.a_blob !=
+                                                      diff_item.b_blob):
+            diff_type = DiffType.MODIFIED
+        elif diff_item.deleted_file:
+            diff_type = DiffType.DELETED
+        elif diff_item.new_file:
+            diff_type = DiffType.ADDED
+        else:
+            continue
+
         linter = get_linter(diff_item.a_path)
         if not linter:
             continue
 
-        (result_pre, result_post) = lint_diff(linter, diff_item)
+        (result_pre, result_post) = lint_diff(linter, diff_item, diff_type)
 
         results_pre_sum += result_pre
         results_post_sum += result_post
 
+        number_of_files[diff_type] += 1
+
         if output_format != OutputFormat.TEXT:
             continue
 
-        if diff_item.a_blob and diff_item.b_blob and diff_item.a_blob != diff_item.b_blob:
+        if diff_type is DiffType.MODIFIED:
             if diff_item.renamed:
                 echo('File ' + style(diff_item.a_path, bold=True) +
                      ' was modified and renamed to ' + style(diff_item.b_path, bold=True) + ':')
             else:
                 echo('File ' + style(diff_item.a_path, bold=True) + ' was modified:')
-        elif diff_item.deleted_file:
+        elif diff_type is DiffType.DELETED:
             echo('File ' + style(diff_item.a_path, bold=True) + ' was deleted:')
-        elif diff_item.new_file:
+        elif diff_type is DiffType.ADDED:
             echo('File ' + style(diff_item.b_path, bold=True) + ' was added:')
 
         print_linter_result(result_pre, result_post)
@@ -131,7 +156,8 @@ def cli(output_format, commit_range):
         secho('Overall change in quality:', bold=True, underline=True)
         print_linter_result(results_pre_sum, results_post_sum)
     elif output_format == OutputFormat.JSON:
-        print_linter_result_json(results_pre_sum, results_post_sum)
+        print_linter_result_json(results_pre_sum, results_post_sum,
+                                 number_of_files)
 
 
 if __name__ == '__main__':
