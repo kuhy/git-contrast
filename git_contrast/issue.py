@@ -1,18 +1,26 @@
 from enum import Enum, auto
 
 
-class IssueType(Enum):
+class IssueCategory(str, Enum):
+    CONVENTION = "convention"
+    HINT = "hint"
+    WARNING = "warning"
+    ERROR = "error"
 
-    FORMAT = auto()
-    DOCUMENTATION = auto()
 
+class Issue:
 
-class Issue(Enum):
+    def __init__(self, symbolic_name: str, linter: str,
+                 category: IssueCategory):
+        self.symbolic_name = symbolic_name
+        self.linter = linter
+        self.category = category
 
-    def __init__(self, issue_type: IssueType, description: str):
-        self.issue_type = issue_type
-        self.description = description
+    def __eq__(self, other):
+        return (self.symbolic_name == other.symbolic_name and
+                self.linter == other.linter and
+                self.category == other.category)
 
-    LINE_TOO_LONG = IssueType.FORMAT, "Line too long"
-    MISSING_CLASS_DOCSTRING = IssueType.DOCUMENTATION, "Missing class docstring"
-    MISSING_FUNCTION_DOCSTRING = IssueType.DOCUMENTATION, "Missing function or method docstring"
+    def __hash__(self):
+        # TODO: do this properly
+        return self.symbolic_name.__hash__().__xor__(self.linter.__hash__())
