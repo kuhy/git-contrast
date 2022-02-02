@@ -14,11 +14,15 @@ class PylintLinter(Linter):
         "fatal": IssueCategory.ERROR
     }
 
+    @property
+    def name(self):
+        return "Pylint"
+
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         output = subprocess.getoutput("pylint --output-format=json " + filename)
         for parsed_issue in json.loads(output):
-            issue = Issue(parsed_issue["symbol"], "Pylint",
+            issue = Issue(parsed_issue["symbol"], self.name,
                           PylintLinter.categories[parsed_issue["type"]])
             if issue in number_of_issues.keys():
                 number_of_issues[issue] = number_of_issues[issue] + 1

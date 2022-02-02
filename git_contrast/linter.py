@@ -35,6 +35,11 @@ class LinterResult:
 
 class Linter(ABC):
 
+    @property
+    @abstractmethod
+    def name() -> str:
+        pass
+
     @abstractmethod
     def lint(self, filename: str) -> LinterResult:
         pass

@@ -76,10 +76,7 @@ def print_linter_result_json(result_pre: LinterResult,
             results[issue.linter] = {}
         results[issue.linter][issue.symbolic_name] = {"pre": pre, "post": post,
                                                       "type": issue.category}
-    echo(json.dumps({"modified": number_of_files[DiffType.MODIFIED],
-                     "deleted": number_of_files[DiffType.DELETED],
-                     "added": number_of_files[DiffType.ADDED],
-                     "results": results}))
+    echo(json.dumps(dict({"results": results}, **number_of_files)))
 
 
 class OutputFormat(str, Enum):
@@ -87,10 +84,10 @@ class OutputFormat(str, Enum):
     JSON = "json"
 
 
-class DiffType(Enum):
-    MODIFIED = auto()
-    DELETED = auto()
-    ADDED = auto()
+class DiffType(str, Enum):
+    MODIFIED = "modified"
+    DELETED = "deleted"
+    ADDED = "added"
 
 
 @click.command()
@@ -109,8 +106,8 @@ def cli(output_format, commit_range):
     results_pre_sum = LinterResult()
     results_post_sum = LinterResult()
 
-    number_of_files = {DiffType.MODIFIED: 0, DiffType.DELETED: 0,
-                       DiffType.ADDED: 0}
+    number_of_files = {DiffType.MODIFIED.value: 0, DiffType.DELETED.value: 0,
+                       DiffType.ADDED.value: 0}
 
     for diff_item in diff_index:
         if diff_item.a_blob and diff_item.b_blob and (diff_item.a_blob !=
@@ -123,6 +120,8 @@ def cli(output_format, commit_range):
         else:
             continue
 
+        number_of_files[diff_type.value] += 1
+
         linter = get_linter(diff_item.a_path)
         if not linter:
             continue
@@ -132,7 +131,9 @@ def cli(output_format, commit_range):
         results_pre_sum += result_pre
         results_post_sum += result_post
 
-        number_of_files[diff_type] += 1
+        key = diff_type.value + "_" + linter.name
+        number_of_files[key] = 1 if key not in number_of_files else (
+            number_of_files[key] + 1)
 
         if output_format != OutputFormat.TEXT:
             continue
