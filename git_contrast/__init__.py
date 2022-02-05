@@ -1,2 +1,2 @@
-from .issue import Issue, IssueCategory
+from .issue import Issue
 from .linter import Linter, LinterResult

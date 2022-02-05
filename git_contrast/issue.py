@@ -1,17 +1,6 @@
-from enum import Enum, auto
-
-
-class IssueCategory(str, Enum):
-    CONVENTION = "convention"
-    HINT = "hint"
-    WARNING = "warning"
-    ERROR = "error"
-
-
 class Issue:
 
-    def __init__(self, symbolic_name: str, linter: str,
-                 category: IssueCategory):
+    def __init__(self, symbolic_name: str, linter: str, category: str):
         self.symbolic_name = symbolic_name
         self.linter = linter
         self.category = category

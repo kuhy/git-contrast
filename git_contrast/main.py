@@ -9,11 +9,18 @@ from click import echo, secho, style
 import git
 
 from git_contrast import Linter, LinterResult
-from git_contrast.linters import PylintLinter
+from git_contrast.linters import (CppcheckLinter, HlintLinter, KtlintLinter,
+                                  PMDLinter, PylintLinter)
 
 
 linters = {
-    '.py': PylintLinter()
+    ".c": CppcheckLinter(),
+    ".cpp": CppcheckLinter(),
+    ".h": CppcheckLinter(),
+    ".hs": HlintLinter(),
+    ".java": PMDLinter(),
+    ".kt": KtlintLinter(),
+    ".py": PylintLinter()
 }
 
 
