@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'click',
-        'git',
+        'GitPython',
     ],
     entry_points={
         'console_scripts': ['git-contrast=git_contrast.main:cli'],

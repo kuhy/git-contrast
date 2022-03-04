@@ -20,6 +20,7 @@ linters = {
     ".hs": HlintLinter(),
     ".java": PMDLinter(),
     ".kt": KtlintLinter(),
+    ".kts": KtlintLinter(),
     ".py": PylintLinter()
 }
 
