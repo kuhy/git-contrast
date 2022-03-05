@@ -13,7 +13,7 @@ class HlintLinter(Linter):
 
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
-        output = subprocess.getoutput("hlint --json " + filename)
+        output = subprocess.getoutput("hlint --cpp-simple --json " + filename)
         for parsed_issue in json.loads(output):
             issue = Issue(parsed_issue["hint"].replace(' ', '-'), self.name,
                           parsed_issue["severity"])
