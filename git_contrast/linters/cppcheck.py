@@ -12,8 +12,12 @@ class CppcheckLinter(Linter):
 
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
-        output = subprocess.getoutput("cppcheck -q -f --template="
-                                      "'{id} {severity}' " + filename)
+        output = subprocess.getoutput("cppcheck -q -f --enable=all "
+                                      "--suppress=missingInclude "
+                                      "--suppress=unusedFunction "
+                                      "--suppress=unmatchedSuppression "
+                                      "--template='{id} {severity}' " +
+                                      filename)
         for line in output.splitlines():
             parsed_issue = line.split(' ')
             issue = Issue(parsed_issue[0], self.name, parsed_issue[1])
