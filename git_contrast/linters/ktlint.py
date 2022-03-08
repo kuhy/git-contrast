@@ -11,6 +11,10 @@ class KtlintLinter(Linter):
     def name(self):
         return "ktlint"
 
+    @property
+    def needs_checkout(self):
+        return False
+
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         output = subprocess.getoutput("ktlint --reporter=json  " + filename)

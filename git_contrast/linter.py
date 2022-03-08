@@ -40,6 +40,11 @@ class Linter(ABC):
     def name() -> str:
         pass
 
+    @property
+    @abstractmethod
+    def needs_checkout() -> bool:
+        pass
+
     @abstractmethod
     def lint(self, filename: str) -> LinterResult:
         pass

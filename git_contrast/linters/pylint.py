@@ -11,6 +11,10 @@ class PylintLinter(Linter):
     def name(self):
         return "Pylint"
 
+    @property
+    def needs_checkout(self):
+        return False
+
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         output = subprocess.getoutput("pylint --output-format=json " + filename)

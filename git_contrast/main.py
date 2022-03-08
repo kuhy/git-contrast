@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 import json
 import os
 import tempfile
@@ -9,14 +9,14 @@ from click import echo, secho, style
 import git
 
 from git_contrast import Linter, LinterResult
-from git_contrast.linters import (CppcheckLinter, HlintLinter, KtlintLinter,
+from git_contrast.linters import (HlintLinter, KtlintLinter, OCLintLinter,
                                   PMDLinter, PylintLinter)
 
 
 linters = {
-    ".c": CppcheckLinter(),
-    ".cpp": CppcheckLinter(),
-    ".h": CppcheckLinter(),
+    ".c": OCLintLinter(),
+    ".cpp": OCLintLinter(),
+    ".h": OCLintLinter(),
     ".hs": HlintLinter(),
     ".java": PMDLinter(),
     ".kt": KtlintLinter(),
@@ -30,7 +30,25 @@ def get_linter(filename: str) -> Optional[Linter]:
     return linters.get(file_extension)
 
 
-def lint_diff(linter: Linter, diff_item, diff_type):
+def lint_diff_with_checkout(linter: Linter, diff_item, diff_type, repo,
+                            commit1, commit2):
+    head = repo.head.reference
+    if diff_type is DiffType.MODIFIED:
+        repo.git.checkout(commit1)
+        result = linter.lint(diff_item.a_path)
+        repo.git.checkout(commit2)
+        result = (result, linter.lint(diff_item.b_path))
+    elif diff_type is DiffType.DELETED:
+        repo.git.checkout(commit1)
+        result = (linter.lint(diff_item.a_path), LinterResult())
+    elif diff_type is DiffType.ADDED:
+        repo.git.checkout(commit2)
+        result = (LinterResult(), linter.lint(diff_item.b_path))
+    repo.git.checkout(head)
+    return result
+
+
+def lint_diff_without_checkout(linter: Linter, diff_item, diff_type):
     if diff_type is DiffType.MODIFIED:
         with tempfile.NamedTemporaryFile() as file1:
             with tempfile.NamedTemporaryFile() as file2:
@@ -49,6 +67,14 @@ def lint_diff(linter: Linter, diff_item, diff_type):
             diff_item.b_blob.stream_data(file2)
             file2.flush()
             return(LinterResult(), linter.lint(file2.name))
+
+
+def lint_diff(linter: Linter, diff_item, diff_type, repo, commit1, commit2):
+    if linter.needs_checkout:
+        return lint_diff_with_checkout(linter, diff_item, diff_type, repo,
+                                       commit1, commit2)
+    else:
+        return lint_diff_without_checkout(linter, diff_item, diff_type)
 
 
 def print_linter_result(result_pre: LinterResult, result_post: LinterResult):
@@ -134,7 +160,8 @@ def cli(output_format, commit_range):
         if not linter:
             continue
 
-        (result_pre, result_post) = lint_diff(linter, diff_item, diff_type)
+        (result_pre, result_post) = lint_diff(linter, diff_item, diff_type,
+                                              repo, commit1, commit2)
 
         results_pre_sum += result_pre
         results_post_sum += result_post

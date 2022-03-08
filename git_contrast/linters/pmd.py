@@ -12,6 +12,10 @@ class PMDLinter(Linter):
     def name(self):
         return "PMD"
 
+    @property
+    def needs_checkout(self):
+        return False
+
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         with tempfile.NamedTemporaryFile() as f:

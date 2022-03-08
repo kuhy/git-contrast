@@ -10,6 +10,10 @@ class CppcheckLinter(Linter):
     def name(self):
         return "Cppcheck"
 
+    @property
+    def needs_checkout(self):
+        return True
+
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         output = subprocess.getoutput("cppcheck -q -f --enable=all "
