@@ -17,6 +17,7 @@ linters = {
     ".c": OCLintLinter(),
     ".cpp": OCLintLinter(),
     ".h": OCLintLinter(),
+    ".hpp": OCLintLinter(),
     ".hs": HlintLinter(),
     ".java": PMDLinter(),
     ".kt": KtlintLinter(),
@@ -25,14 +26,36 @@ linters = {
 }
 
 
-def get_linter(filename: str) -> Optional[Linter]:
+class Language(str, Enum):
+    PYTHON = "Python"
+    JAVA = "Java"
+    KOTLIN = "Kotlin"
+    C = "C"
+    CPP = "C++"
+    HASKELL = "Haskell"
+
+
+language_extensions = {
+    Language.PYTHON: {".py"},
+    Language.JAVA: {".java"},
+    Language.KOTLIN: {".kt", ".kts"},
+    Language.C: {".c", ".h"},
+    Language.CPP: {".cpp", ".h", ".hpp"},
+    Language.HASKELL: {".hs"}
+}
+
+
+def get_linter(filename: str, language: Language) -> Optional[Linter]:
     file_extension = os.path.splitext(filename)[1]
+    if language is not None and (file_extension not in
+                                 language_extensions[language]):
+        return
     return linters.get(file_extension)
 
 
 def lint_diff_with_checkout(linter: Linter, diff_item, diff_type, repo,
                             commit1, commit2):
-    head = repo.head.reference
+    # TODO head = repo.head.reference
     if diff_type is DiffType.MODIFIED:
         repo.git.checkout(commit1)
         result = linter.lint(diff_item.a_path)
@@ -44,7 +67,7 @@ def lint_diff_with_checkout(linter: Linter, diff_item, diff_type, repo,
     elif diff_type is DiffType.ADDED:
         repo.git.checkout(commit2)
         result = (LinterResult(), linter.lint(diff_item.b_path))
-    repo.git.checkout(head)
+    # repo.git.checkout(head)
     return result
 
 
@@ -127,8 +150,9 @@ class DiffType(str, Enum):
 @click.command()
 @click.option("--output-format", type=click.Choice(OutputFormat),
               default=OutputFormat.TEXT)
+@click.option("--language", type=click.Choice(Language))
 @click.argument('commit_range', nargs=-1)
-def cli(output_format, commit_range):
+def cli(output_format, language, commit_range):
     repo = git.Repo(os.getcwd())
 
     # TODO: improve arguments validity checking
@@ -156,7 +180,7 @@ def cli(output_format, commit_range):
 
         number_of_files[diff_type.value] += 1
 
-        linter = get_linter(diff_item.a_path)
+        linter = get_linter(diff_item.a_path, language)
         if not linter:
             continue
 
