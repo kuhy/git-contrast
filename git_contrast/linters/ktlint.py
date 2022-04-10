@@ -18,6 +18,8 @@ class KtlintLinter(Linter):
     def lint(self, filename: str) -> LinterResult:
         number_of_issues = {}
         output = subprocess.getoutput("ktlint --reporter=json  " + filename)
+        output = ' '.join([line for line in output.split('\n')
+                           if not line[0].isdigit()])
         files = json.loads(output)
         if len(files) != 0:
             for parsed_issue in files[0]["errors"]:

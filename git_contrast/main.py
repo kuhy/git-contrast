@@ -9,15 +9,15 @@ from click import echo, secho, style
 import git
 
 from git_contrast import Linter, LinterResult
-from git_contrast.linters import (HlintLinter, KtlintLinter, OCLintLinter,
+from git_contrast.linters import (FlawfinderLinter, HlintLinter, KtlintLinter,
                                   PMDLinter, PylintLinter)
 
 
 linters = {
-    ".c": OCLintLinter(),
-    ".cpp": OCLintLinter(),
-    ".h": OCLintLinter(),
-    ".hpp": OCLintLinter(),
+    ".c": FlawfinderLinter(),
+    ".cpp": FlawfinderLinter(),
+    ".h": FlawfinderLinter(),
+    ".hpp": FlawfinderLinter(),
     ".hs": HlintLinter(),
     ".java": PMDLinter(),
     ".kt": KtlintLinter(),
@@ -39,8 +39,8 @@ language_extensions = {
     Language.PYTHON: {".py"},
     Language.JAVA: {".java"},
     Language.KOTLIN: {".kt", ".kts"},
-    Language.C: {".c", ".h"},
-    Language.CPP: {".cpp", ".h", ".hpp"},
+    Language.C: {".c", ".cpp", ".h", ".hpp"},
+    Language.CPP: {".c", ".cpp", ".h", ".hpp"},
     Language.HASKELL: {".hs"}
 }
 
