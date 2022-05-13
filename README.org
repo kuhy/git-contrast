@@ -2,7 +2,12 @@
 #+AUTHOR: Ondřej Kuhejda
 /CLI tool that reveals change in code quality between commits/
 
-The tool can be executed in the following manner:
+Install the tool using =pip=:
+#+BEGIN_SRC sh
+  pip3 install --user -e .
+#+END_SRC
+
+The tool can be then executed in the following manner:
 #+BEGIN_SRC sh
   cd $GIT_REPO
   git-contrast $COMMIT_HASH_1 $COMMIT_HASH_2
