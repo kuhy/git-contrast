@@ -1,3 +1,29 @@
 #+TITLE: git-contrast
 #+AUTHOR: Ondřej Kuhejda
 /CLI tool that reveals change in code quality between commits/
+
+The tool can be executed in the following manner:
+#+BEGIN_SRC sh
+  cd $GIT_REPO
+  git-contrast $COMMIT_HASH_1 $COMMIT_HASH_2
+#+END_SRC
+
+If you want to lint only files that are written in some particular language use a =--language= parameter.
+
+To output the data as a JSON add =--output-format=json= flag.
+
+For instance:
+#+BEGIN_SRC sh
+  git-contrast --output-format=json --language C 59e7dec3e8bb0a8d4050d03c2dc32cf71ffa87c6 f70b90b19e68214de2a111f12424da45555c1db3
+#+END_SRC
+
+Following linters need to be installed:
+- Pylint (2.12.2)
+- PMD (6.42.0)
+- ktlint (0.43.2)
+- HLint (3.2.8)
+- flawfinder (2.0.19)
+
+The tool requires following Python packages:
+- click
+- GitPython
