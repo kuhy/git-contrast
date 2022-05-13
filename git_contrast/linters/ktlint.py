@@ -6,6 +6,7 @@ from git_contrast import Linter, LinterResult
 
 
 class KtlintLinter(Linter):
+    """Class that is responsible for running the ktlint linter (Kotlin)."""
 
     @property
     def name(self):

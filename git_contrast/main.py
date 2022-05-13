@@ -1,3 +1,5 @@
+"""Return the difference in code quality between the given commits."""
+
 from enum import Enum
 import json
 import os
@@ -27,6 +29,8 @@ linters = {
 
 
 class Language(str, Enum):
+    """Class that represents programming language."""
+
     PYTHON = "Python"
     JAVA = "Java"
     KOTLIN = "Kotlin"
@@ -46,6 +50,7 @@ language_extensions = {
 
 
 def get_linter(filename: str, language: Language) -> Optional[Linter]:
+    """Return linter based on the file extension."""
     file_extension = os.path.splitext(filename)[1]
     if language is not None and (file_extension not in
                                  language_extensions[language]):
@@ -55,6 +60,7 @@ def get_linter(filename: str, language: Language) -> Optional[Linter]:
 
 def lint_diff_with_checkout(linter: Linter, diff_item, diff_type, repo,
                             commit1, commit2):
+    """Lint given commits using the diff object."""
     # TODO head = repo.head.reference
     if diff_type is DiffType.MODIFIED:
         repo.git.checkout(commit1)
@@ -72,6 +78,7 @@ def lint_diff_with_checkout(linter: Linter, diff_item, diff_type, repo,
 
 
 def lint_diff_without_checkout(linter: Linter, diff_item, diff_type):
+    """Lint given commits by checking out corresponding branches."""
     if diff_type is DiffType.MODIFIED:
         with tempfile.NamedTemporaryFile() as file1:
             with tempfile.NamedTemporaryFile() as file2:
@@ -93,6 +100,7 @@ def lint_diff_without_checkout(linter: Linter, diff_item, diff_type):
 
 
 def lint_diff(linter: Linter, diff_item, diff_type, repo, commit1, commit2):
+    """Lint the given commits and return the difference in code quality."""
     if linter.needs_checkout:
         return lint_diff_with_checkout(linter, diff_item, diff_type, repo,
                                        commit1, commit2)
@@ -101,6 +109,7 @@ def lint_diff(linter: Linter, diff_item, diff_type, repo, commit1, commit2):
 
 
 def print_linter_result(result_pre: LinterResult, result_post: LinterResult):
+    """Print the results from the linter."""
     no_change = True
     issues = set(result_pre.number_of_issues.keys())
     issues = issues.union(set(result_post.number_of_issues.keys()))
@@ -121,6 +130,7 @@ def print_linter_result(result_pre: LinterResult, result_post: LinterResult):
 def print_linter_result_json(result_pre: LinterResult,
                              result_post: LinterResult,
                              number_of_files):
+    """Print the linter results in JSON format."""
     results = {}
     issues = set(result_pre.number_of_issues.keys())
     issues = issues.union(set(result_post.number_of_issues.keys()))
@@ -137,11 +147,13 @@ def print_linter_result_json(result_pre: LinterResult,
 
 
 class OutputFormat(str, Enum):
+    """Format that will be used on output."""
     TEXT = "text"
     JSON = "json"
 
 
 class DiffType(str, Enum):
+    """Possible types of diff objects."""
     MODIFIED = "modified"
     DELETED = "deleted"
     ADDED = "added"
@@ -153,6 +165,7 @@ class DiffType(str, Enum):
 @click.option("--language", type=click.Choice(Language))
 @click.argument('commit_range', nargs=-1)
 def cli(output_format, language, commit_range):
+    """Return the difference in code quality between the given commits."""
     repo = git.Repo(os.getcwd())
 
     # TODO: improve arguments validity checking

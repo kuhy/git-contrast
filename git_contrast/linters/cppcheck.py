@@ -5,6 +5,7 @@ from git_contrast import Linter, LinterResult
 
 
 class CppcheckLinter(Linter):
+    """Class that is responsible for running the Cppcheck linter (C/C++)."""
 
     @property
     def name(self):

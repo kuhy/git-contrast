@@ -1,4 +1,5 @@
 class Issue:
+    """Class that represents an issue found by linter."""
 
     def __init__(self, symbolic_name: str, linter: str, category: str):
         self.symbolic_name = symbolic_name

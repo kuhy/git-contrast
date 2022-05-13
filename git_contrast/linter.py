@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class LinterResult:
+    """The object that holds issues found by linter."""
 
     def __init__(self, number_of_issues=None):
         if number_of_issues:
@@ -34,17 +35,21 @@ class LinterResult:
 
 
 class Linter(ABC):
+    """Abstract class that represents linter."""
 
     @property
     @abstractmethod
     def name() -> str:
+        """Return name of the linter."""
         pass
 
     @property
     @abstractmethod
     def needs_checkout() -> bool:
+        """Return false if the file can be linted outside examined project."""
         pass
 
     @abstractmethod
     def lint(self, filename: str) -> LinterResult:
+        """Lint the given file and return results."""
         pass

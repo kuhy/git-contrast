@@ -6,6 +6,7 @@ from git_contrast import Linter, LinterResult
 
 
 class HlintLinter(Linter):
+    """Class that is responsible for running the HLint linter (Haskell)."""
 
     @property
     def name(self):

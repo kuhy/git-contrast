@@ -7,6 +7,7 @@ from git_contrast import Linter, LinterResult
 
 
 class PMDLinter(Linter):
+    """Class that is responsible for running the PMD linter (Java)."""
 
     @property
     def name(self):

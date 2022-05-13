@@ -6,6 +6,7 @@ from git_contrast import Linter, LinterResult
 
 
 class FlawfinderLinter(Linter):
+    """Class that is responsible for running the flawfinder linter (C/C++)."""
 
     @property
     def name(self):

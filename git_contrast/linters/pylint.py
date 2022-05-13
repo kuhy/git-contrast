@@ -6,6 +6,7 @@ from git_contrast import Linter, LinterResult
 
 
 class PylintLinter(Linter):
+    """Class that is responsible for running the Pylint linter (Python)."""
 
     @property
     def name(self):
